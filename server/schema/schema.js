@@ -51,7 +51,7 @@ const BookType = new GraphQLObjectType( {
         resolverCounter['author']++;
         // console.log(parent) // books array
         // return _.find(authors, {id: parent.authorId});
-        return Author.findById(parent.authorId); // this will look in author collection and look for Id we pass in
+        return Author.findOne({_id: parent.authorId}); // this will look in author collection and look for Id we pass in / genre, author, all books
       }
     }
   })
@@ -89,6 +89,7 @@ const RootQuery = new GraphQLObjectType({
         // return _.find(books, {id: args.id});
         if (!resolverCounter['rootBook']) resolverCounter['rootBook'] = 0;
         resolverCounter['rootBook']++;
+        // timeThisShit(Book.findById, args.id);
         return Book.findById(args.id);
       }
     },
@@ -163,6 +164,16 @@ const Mutation = new GraphQLObjectType({
     }
   }
 })
+
+// async function explainThisShit(args) {
+//   const stats = await Book.findById(args.id).explain("executionStats");
+//   console.log(stats);
+// }
+
+// function timeThisShit(callback, args) {
+//   let startingTime = Date.now();
+//   callback(args).then(() => console.log(Date.now() - startingTime));
+// }
 
 module.exports = new GraphQLSchema({
   query: RootQuery,

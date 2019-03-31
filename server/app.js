@@ -3,6 +3,7 @@ const graphqlHTTP = require('express-graphql');
 const schema = require('./schema/schema');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const stack = require('./model/stack')
 require('dotenv').config();
 
 const app = express();
@@ -24,9 +25,11 @@ app.use('/graphql', graphqlHTTP({
 
 app.get('/resolvers', (req, res) => {res.json(resolverCounter)})
 
+app.get('/stack', (req, res) => {res.json(stack)})
+
 let resolverCounter = schema.resolverCounter;
 
-setInterval(function(){ console.log('this is the resolver counter', resolverCounter) }, 3000);
+setInterval(function(){ console.log('this is the resolver counter', resolverCounter) }, 20000);
 
 app.listen(3500, () => {
   console.log('now listening for requests on port 3500')
