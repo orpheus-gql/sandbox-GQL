@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const stack = require('./stack')
 const Schema = mongoose.Schema;
+const reqTracker = require('../orpheus/trackResolver')
 
 const bookSchema = new Schema({
   name: String,
@@ -8,9 +8,8 @@ const bookSchema = new Schema({
   authorId: String
 })
 
-bookSchema.pre('find', function(){this._startTime = Date.now()})
+bookSchema.pre('find', function(){reqTracker.preRequest(this)})
 bookSchema.post('find', function(){
-  if (this._startTime) stack.push('book runtime: ' + (Date.now() - this._startTime));
-})
+  reqTracker.postRequest(this)});
 
 module.exports = mongoose.model('Book', bookSchema)

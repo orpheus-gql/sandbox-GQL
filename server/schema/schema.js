@@ -2,6 +2,7 @@ const graphql = require('graphql');
 const _ = require('lodash');
 const Book = require('../model/book')
 const Author = require('../model/author')
+const reqTracker = require ('../orpheus/trackResolver');
 
 const resolverCounter = {};
 
@@ -46,9 +47,7 @@ const BookType = new GraphQLObjectType( {
     author: {
       type: AuthorType,
       resolve(parent, args) {
-        console.log('resolving author inside of book');
-        if (!resolverCounter['author']) resolverCounter['author'] = 0;
-        resolverCounter['author']++;
+        reqTracker.addEntry('author');
         // console.log(parent) // books array
         // return _.find(authors, {id: parent.authorId});
         return Author.findOne({_id: parent.authorId}); // this will look in author collection and look for Id we pass in / genre, author, all books
@@ -66,9 +65,7 @@ const AuthorType = new GraphQLObjectType( {
     books: {
       type: new GraphQLList(BookType),
       resolve(parent, args) {
-        console.log('resolving book inside of author');
-        if (!resolverCounter['book']) resolverCounter['book'] = 0;
-        resolverCounter['book']++;
+        reqTracker.addEntry('book');
         // return _.filter(books, {authorId: parent.id});
         return Book.find({authorId: parent.id}); // look all records in book collection based on criteria in object
     }}
@@ -87,8 +84,7 @@ const RootQuery = new GraphQLObjectType({
         // write code to get data from db / other source; resolve functions gets fired when query comes in
         console.log('resolving book inside of root');
         // return _.find(books, {id: args.id});
-        if (!resolverCounter['rootBook']) resolverCounter['rootBook'] = 0;
-        resolverCounter['rootBook']++;
+        reqTracker.addEntry('rootBook');
         // timeThisShit(Book.findById, args.id);
         return Book.findById(args.id);
       }
@@ -98,8 +94,7 @@ const RootQuery = new GraphQLObjectType({
       args: {id: {type: GraphQLID}},
       resolve(parent, args) {
         console.log('resolving author inside of root');
-        if (!resolverCounter['rootAuthor']) resolverCounter['rootAuthor'] = 0;
-        resolverCounter['rootAuthor']++;
+        reqTracker.addEntry('rootAuthor');
         // return _.find(authors, {id: args.id});
         return Author.findById(args.id);
       }
@@ -108,8 +103,7 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(BookType),
       resolve(parent, args) {
         console.log('resolving multiple books inside of root');
-        if (!resolverCounter['rootBooks']) resolverCounter['rootBooks'] = 0;
-        resolverCounter['rootBooks']++;
+        reqTracker.addEntry('rootBooks');
         // return books // will return entire list of books depending on what we ask for
         return Book.find({}); // pass in empty object b/c an empty object with no criteria will return all records in the collection
       }
@@ -118,8 +112,7 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(AuthorType),
       resolve(parent, args) {
         console.log('resolving multiple authors inside of root');
-        if (!resolverCounter['rootAuthors']) resolverCounter['rootAuthors'] = 0;
-        resolverCounter['rootAuthors']++;
+        reqTracker.addEntry('rootAuthors');
         // return authors
         return Author.find({});
       }
