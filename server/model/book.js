@@ -10,6 +10,6 @@ const bookSchema = new Schema({
 
 bookSchema.pre('find', function(){reqTracker.preRequest(this)})
 bookSchema.post('find', function(){
-  reqTracker.postRequest(this)});
+  reqTracker.postRequest(this, 'bookSchema')});
 
 module.exports = mongoose.model('Book', bookSchema)

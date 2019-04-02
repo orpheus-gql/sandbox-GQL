@@ -16,9 +16,12 @@ ResolverTrackerConstructor.prototype.preRequest = function(context) {
   context._startTime = Date.now();
 }
 
-ResolverTrackerConstructor.prototype.postRequest = function(context) {
-  // console.log(context);
-  if (context._startTime) this.requests.push(Date.now() - context._startTime);
+ResolverTrackerConstructor.prototype.postRequest = function(context, name) {
+  const data = {name: name, time: null};
+  if (context._startTime) {
+    data.time = Date.now() - context._startTime
+    this.requests.push(data);
+  }
 }
 
 module.exports = new ResolverTrackerConstructor();
