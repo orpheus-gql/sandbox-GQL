@@ -29,6 +29,11 @@ app.get('/resolvers', (req, res) => { res.json(resolverCounter) })
 
 app.get('/requests', (req, res) => { res.json(reqTracker) })
 
+app.get('/reset', (req, res) => { 
+  reqTracker.reset();
+  res.json(reqTracker);
+})
+
 let resolverCounter = schema.resolverCounter;
 
 let netStats = new NetworkConstructor()

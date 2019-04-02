@@ -24,4 +24,10 @@ ResolverTrackerConstructor.prototype.postRequest = function(context, name) {
   }
 }
 
+ResolverTrackerConstructor.prototype.reset = function() {
+  this.counts = {};
+  this.history = [];
+  this.requests = [];
+}
+
 module.exports = new ResolverTrackerConstructor();
