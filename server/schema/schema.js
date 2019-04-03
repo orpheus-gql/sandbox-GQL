@@ -1,8 +1,7 @@
 const graphql = require('graphql');
 const _ = require('lodash');
-const Book = require('../model/book')
-const Author = require('../model/author')
 const reqTracker = require ('../orpheus/trackResolver');
+const pool = require('../model/database');
 
 const resolverCounter = {};
 
@@ -16,59 +15,100 @@ const {
   GraphQLString, 
   GraphQLSchema, 
   GraphQLID, 
+  GraphQLBoolean,
+  GraphQLScalarType,
   GraphQLInt, 
   GraphQLList,
   GraphQLNonNull 
 } = graphql;
 
-// dummy data
-// var books = [
-//   {name: 'Name of the Wind', genre: 'Fantasy', id: '1', authorId: '1'},
-//   {name: 'The Final Empire', genre: 'Fantasy', id: '2', authorId: '2'},
-//   {name: 'The Long Earth', genre: 'Sci-Fi', id: '3', authorId: '3'},
-//   {name: 'The Hero of Ages', genre: 'Fantasy', id: '4', authorId: '2'},
-//   {name: 'The Colour of Magic', genre: 'Fantasy', id: '5', authorId: '3'},
-//   {name: 'The Light Fantastic', genre: 'Fantasy', id: '6', authorId: '3'}
-// ];
-
-// var authors = [
-//   {name: 'Patrick Rothfuss', age: 44, id: '1'},
-//   {name: 'Brandon Sanderson', age: 42, id: '2'},
-//   {name: 'Terry Pratchett', age: 66, id: '3'}
-// ];
-
-const BookType = new GraphQLObjectType( {
-  name: 'Book',
+const SpacecraftType = new GraphQLObjectType( {
+  name: 'spacecraft',
   fields: () => ({
-    // fields property will actually be a function; needs to be a function because later on when we have multiple types and they have references to one another, then one type might not know what another type is unless we wrap those fields in a function
-    id: {type: GraphQLID},
+    _id: {type: GraphQLID},
     name: {type: GraphQLString},
-    genre: {type: GraphQLString},
-    author: {
-      type: AuthorType,
+    launch_date: {type: GraphQLScalarType},
+    country: {
+      type: CountryType,
       resolve(parent, args) {
-        reqTracker.addEntry('author');
-        // console.log(parent) // books array
+        reqTracker.addEntry('country');
+        return pool
+        .query('SELECT * FROM country WHERE _id = $1;')
+        .then(data => data);
+      }
+    },
+    agency: {
+      type: AgencyType,
+      resolve(parent, args) {
+        reqTracker.addEntry('agency');
+        return pool
+        .query('SELECT * FROM agency WHERE _id = $1;')
+        .then(data => data);
+      }
+    },
+    planet:  {
+      type: PlanetType,
+      resolve(parent, args) {
+        reqTracker.addEntry('planet');
+        return pool
+        .query('SELECT * FROM planet WHERE _id = $1;')
+        .then(data => data);
+      }
+    },
+    mission_type: {type: GraphQLString},
+    success: {type: GraphQLBoolean},
+    engine: {
+      type: EngineType,
+      resolve(parent, args) {
+        reqTracker.addEntry('spacecraft');
         // return _.find(authors, {id: parent.authorId});
-        return Author.findOne({_id: parent.authorId}); // this will look in author collection and look for Id we pass in / genre, author, all books
+        return pool
+        .query('SELECT * FROM engine WHERE _id = $1;')
+        .then(data => data);
       }
     }
   })
 });
 
-const AuthorType = new GraphQLObjectType( {
-  name: 'Author',
+const AgencyType = new GraphQLObjectType( {
+  name: 'agency',
   fields: () => ({
-    id: {type: GraphQLID},
+    _id: {type: GraphQLID},
     name: {type: GraphQLString},
-    age: {type: GraphQLInt},
-    books: {
-      type: new GraphQLList(BookType),
+    country: {
+      type: CountryType,
       resolve(parent, args) {
-        reqTracker.addEntry('book');
+        reqTracker.addEntry('country');
         // return _.filter(books, {authorId: parent.id});
-        return Book.find({authorId: parent.id}); // look all records in book collection based on criteria in object
-    }}
+        return pool
+        .query('SELECT * FROM country WHERE _id = $1;');
+      }
+    }
+  })
+});
+
+const CountryType = new GraphQLObjectType( {
+  name: 'country',
+  fields: () => ({
+    _id: {type: GraphQLID},
+    name: {type: GraphQLString}
+  })
+});
+
+const PlanetType = new GraphQLObjectType( {
+  name: 'country',
+  fields: () => ({
+    _id: {type: GraphQLID},
+    name: {type: GraphQLString},
+    type: {type: GraphQLString}
+  })
+});
+
+const EngineType = new GraphQLObjectType( {
+  name: 'country',
+  fields: () => ({
+    _id: {type: GraphQLID},
+    name: {type: GraphQLString}
   })
 });
 
@@ -77,44 +117,49 @@ const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
     // don't need to wrap in a function because we don't need to worry about the order
-    book: {
-      type: BookType,
-      args: {id: {type: GraphQLID}},
+    spacecraft: {
+      type: SpacecraftType,
+      args: {_id: {type: GraphQLID}},
       resolve(parent, args) {
-        // write code to get data from db / other source; resolve functions gets fired when query comes in
-        console.log('resolving book inside of root');
-        // return _.find(books, {id: args.id});
-        reqTracker.addEntry('rootBook');
-        // timeThisShit(Book.findById, args.id);
-        return Book.findById(args.id);
+        reqTracker.addEntry('spacecraft');
+        return pool
+        .query('SELECT * FROM spacecraft WHERE _id = $1;');
       }
     },
-    author: {
-      type: AuthorType,
-      args: {id: {type: GraphQLID}},
+    agency: {
+      type: AgencyType,
+      args: {_id: {type: GraphQLID}},
       resolve(parent, args) {
-        console.log('resolving author inside of root');
-        reqTracker.addEntry('rootAuthor');
-        // return _.find(authors, {id: args.id});
-        return Author.findById(args.id);
+        reqTracker.addEntry('agency');
+        return pool
+        .query('SELECT * FROM agency WHERE _id = $1;');
       }
     },
-    books: {
-      type: new GraphQLList(BookType),
+    country: {
+      type: CountryType,
+      args: {_id: {type: GraphQLID}},
       resolve(parent, args) {
-        console.log('resolving multiple books inside of root');
-        reqTracker.addEntry('rootBooks');
-        // return books // will return entire list of books depending on what we ask for
-        return Book.find({}); // pass in empty object b/c an empty object with no criteria will return all records in the collection
+        reqTracker.addEntry('country');
+        return pool
+        .query('SELECT * FROM country WHERE _id = $1;');
       }
     },
-    authors: {
-      type: new GraphQLList(AuthorType),
+    planet: {
+      type: PlanetType,
+      args: {_id: {type: GraphQLID}},
       resolve(parent, args) {
-        console.log('resolving multiple authors inside of root');
-        reqTracker.addEntry('rootAuthors');
-        // return authors
-        return Author.find({});
+        reqTracker.addEntry('planet');
+        return pool
+        .query('SELECT * FROM planet WHERE _id = $1;');
+      }
+    },
+    engine: {
+      type: EngineType,
+      args: {_id: {type: GraphQLID}},
+      resolve(parent, args) {
+        reqTracker.addEntry('engine');
+        return pool
+        .query('SELECT * FROM engine WHERE _id = $1;');
       }
     }
   }
@@ -125,48 +170,38 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
-    addAuthor: {
-      type: AuthorType,
-      args: {
-        name: {type: new GraphQLNonNull(GraphQLString)},
-        age: {type: new GraphQLNonNull(GraphQLInt)}
-      },
-      resolve(parent, args){
-        let author = new Author({
-          name: args.name,
-          age: args.age
-        });
-        return author.save();
-      }
+    addSpacecraft: {
+      type: SpacecraftType,
+      // args: {
+      //   name: {type: new GraphQLNonNull(GraphQLString)},
+      //   age: {type: new GraphQLNonNull(GraphQLInt)}
+      // },
+      // resolve(parent, args){
+      //   let author = new Author({
+      //     name: args.name,
+      //     age: args.age
+      //   });
+      //   return author.save();
+      // }
     },
-    addBook: {
-      type: BookType,
-      args: {
-        name: {type: new GraphQLNonNull(GraphQLString)},
-        genre: {type: new GraphQLNonNull(GraphQLString)},
-        authorId: {type: new GraphQLNonNull(GraphQLID)}
-      },
-      resolve(parent, args){
-        let book = new Book({
-          name: args.name,
-          genre: args.genre,
-          authorId: args.authorId
-        });
-        return book.save();
-      }
+    addAgency: {
+      type: AgencyType,
+      // args: {
+      //   name: {type: new GraphQLNonNull(GraphQLString)},
+      //   genre: {type: new GraphQLNonNull(GraphQLString)},
+      //   authorId: {type: new GraphQLNonNull(GraphQLID)}
+      // },
+      // resolve(parent, args){
+      //   let book = new Book({
+      //     name: args.name,
+      //     genre: args.genre,
+      //     authorId: args.authorId
+      //   });
+      //   return book.save();
+      // }
     }
   }
 })
-
-// async function explainThisShit(args) {
-//   const stats = await Book.findById(args.id).explain("executionStats");
-//   console.log(stats);
-// }
-
-// function timeThisShit(callback, args) {
-//   let startingTime = Date.now();
-//   callback(args).then(() => console.log(Date.now() - startingTime));
-// }
 
 module.exports = new GraphQLSchema({
   query: RootQuery,

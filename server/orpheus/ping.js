@@ -9,6 +9,7 @@ NetworkConstructor.prototype.ping = function() {
   const now = Date.now();
   let elapsedTime;
   const that = this;
+  // change to pg
   mongoose.connection.db.admin().ping(function (err, result) {
    if (err || !result)
     console.log('no ping result');
