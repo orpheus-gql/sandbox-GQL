@@ -4,7 +4,6 @@ const schema = require('./schema/schema');
 const cors = require('cors');
 const NetworkConstructor = require('./orpheus/ping')
 const reqTracker = require('./orpheus/trackResolver')
-require('dotenv').config();
 
 const app = express();
 
@@ -32,9 +31,9 @@ let resolverCounter = schema.resolverCounter;
 let netStats = new NetworkConstructor()
 
 setInterval(function () { 
-  netStats.ping();
-  console.log('this is the resolver counter', resolverCounter) 
-}, 3000);
+  // netStats.ping();
+  console.log('this is the resolver counter', reqTracker) 
+}, 10000);
 
 app.listen(3500, () => {
   console.log('now listening for requests on port 3500')

@@ -15,8 +15,10 @@
     "express": "^4.16.4",
     "express-graphql": "^0.7.1",
     "graphql": "^14.1.1",
+    "graphql-iso-date": "^3.6.1",
     "lodash": "^4.17.11",
     "mongoose": "^5.4.19",
-    "nodemon": "^1.18.10"
+    "nodemon": "^1.18.10",
+    "ping": "^0.2.2"
   }
 }
